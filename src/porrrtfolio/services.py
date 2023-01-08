@@ -1,3 +1,5 @@
+"""Interfaces and implementations for external services."""
+
 import dataclasses
 import os
 from typing import Protocol
@@ -10,6 +12,18 @@ _AV_KEY_NAME = "PORRRTFOLIO_ALPHA_VANTAGE_KEY"
 
 @dataclasses.dataclass
 class Response:
+    """Response from [RequestMaker][porrrtfolio.services.RequestMaker].
+
+    Idea is there will either be some data or an error.
+
+    So instead of `if "err" in resp`, `if resp.err`.
+
+    Not a massive quality of life improvement but a bit more structured.
+
+    Methods:
+        to_dict:  Response as a dictionary.
+    """
+
     data: dict | None
     err: str | None
 

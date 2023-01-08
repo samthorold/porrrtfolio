@@ -15,7 +15,7 @@ def prices(
     symbol: str,
     exchange: str | None = None,
     read_from_cache: bool = True,
-    key: str | None = None
+    key: str | None = None,
 ) -> dict:
     _DATA_DIR.mkdir(parents=True, exist_ok=True)
     if exchange:

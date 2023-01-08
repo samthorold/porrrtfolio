@@ -1,0 +1,7 @@
+site_name: Porrrtfolio
+
+plugins:
+- mkdocstrings:
+    handlers:
+      python:
+        paths: [src]
