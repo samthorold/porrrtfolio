@@ -1,6 +1,7 @@
 """Interfaces and implementations for external services."""
 
 import dataclasses
+import logging
 import os
 from typing import Protocol
 
@@ -8,6 +9,9 @@ import requests
 
 
 _AV_KEY_NAME = "PORRRTFOLIO_ALPHA_VANTAGE_KEY"
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass
@@ -40,13 +44,19 @@ class Requests:
     def request(self, method: str, url: str, **kwargs) -> Response:
         try:
             resp = requests.request(method=method, url=url, **kwargs)
+            req = resp.request
+            logger.info(f"{req.url=}, {req.body=}")
         except Exception as err:
-            return Response(err=repr(err))
+            return Response(err=repr(err), data=None)
         if resp.ok:
             try:
-                return Response(data=resp.json())
+                data = resp.json()
             except Exception as err:
-                return Response(err=f"Err turninging {resp.contents=} into json {repr(err)}")
+                return Response(err=f"Err turning {resp.content=} into json {repr(err)}", data=None)
+            else:
+                if any("err" in k.lower() for k in data):
+                    return Response(err=data, data=None)
+                return Response(data=data, err=None)
 
 
 class AlphaVantage:
@@ -62,14 +72,15 @@ class AlphaVantage:
 
     _base_url = "https://www.alphavantage.co/query"
 
-    def __init__(self, key: str | None, request_maker: RequestMaker = Requests):
+    def __init__(self, key: str | None = None, request_maker: RequestMaker | None = None):
         self._key = key if key is not None else os.getenv(_AV_KEY_NAME)
+        self._request_maker = Requests() if request_maker is None else request_maker
 
     def time_series_daily_adjusted(self, symbol: str, exchange: str | None) -> dict:
         function = "TIME_SERIES_DAILY_ADJUSTED"
         if exchange is not None:
             symbol = f"{exchange}.{symbol}"
-        resp = self.request_maker.request(
+        resp = self._request_maker.request(
             method="GET",
             url=self._base_url,
             params={
@@ -78,5 +89,13 @@ class AlphaVantage:
                 "apikey": self._key,
             }
         )
+        return resp.to_dict()
 
+    def symbol_search(self, keywords: str) -> dict:
+        function = "SYMBOL_SEARCH"
+        resp = self._request_maker.request(
+            method="GET",
+            url=self._base_url,
+            params={"function": function, "keywords": keywords, "apikey": self._key}
+        )
         return resp.to_dict()
