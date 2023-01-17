@@ -35,9 +35,9 @@ class Response:
     def to_dict(self, incl_all: bool = True) -> dict:
         if incl_all:
             return dataclasses.asdict(self)
-        if self.data:
-            return self.data
-        return self.err
+        if self.err:
+            return {"err": self.err}
+        return {"data": self.data}
 
     def to_json(self, incl_all: bool = False) -> str:
         return json.dumps(self.to_dict(incl_all=incl_all))
@@ -88,7 +88,7 @@ class AlphaVantage:
         self._key = key if key is not None else os.getenv(_AV_KEY_NAME)
         self._request_maker = Requests() if request_maker is None else request_maker
 
-    def time_series_daily_adjusted(self, symbol: str, exchange: str | None) -> dict:
+    def time_series_daily_adjusted(self, symbol: str, exchange: str | None = None) -> dict:
         function = "TIME_SERIES_DAILY_ADJUSTED"
         if exchange is not None:
             symbol = f"{exchange}.{symbol}"
@@ -103,7 +103,7 @@ class AlphaVantage:
         )
         return resp
 
-    def symbol_search(self, keywords: str) -> dict:
+    def symbol_search(self, keywords: str) -> Response:
         function = "SYMBOL_SEARCH"
         resp = self._request_maker.request(
             method="GET",
