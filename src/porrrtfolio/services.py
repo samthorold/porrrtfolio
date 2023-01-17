@@ -1,6 +1,7 @@
 """Interfaces and implementations for external services."""
 
 import dataclasses
+import json
 import logging
 import os
 from typing import Protocol
@@ -31,8 +32,15 @@ class Response:
     data: dict | None
     err: str | None
 
-    def to_dict(self) -> dict:
-        return dataclasses.asdict(self)
+    def to_dict(self, incl_all: bool = True) -> dict:
+        if incl_all:
+            return dataclasses.asdict(self)
+        if self.data:
+            return self.data
+        return self.err
+
+    def to_json(self, incl_all: bool = False) -> str:
+        return json.dumps(self.to_dict(incl_all=incl_all))
 
 
 class RequestMaker(Protocol):
@@ -52,7 +60,9 @@ class Requests:
             try:
                 data = resp.json()
             except Exception as err:
-                return Response(err=f"Err turning {resp.content=} into json {repr(err)}", data=None)
+                return Response(
+                    err=f"Err turning {resp.content=} into json {repr(err)}", data=None
+                )
             else:
                 if any("err" in k.lower() for k in data):
                     return Response(err=data, data=None)
@@ -72,7 +82,9 @@ class AlphaVantage:
 
     _base_url = "https://www.alphavantage.co/query"
 
-    def __init__(self, key: str | None = None, request_maker: RequestMaker | None = None):
+    def __init__(
+        self, key: str | None = None, request_maker: RequestMaker | None = None
+    ):
         self._key = key if key is not None else os.getenv(_AV_KEY_NAME)
         self._request_maker = Requests() if request_maker is None else request_maker
 
@@ -87,15 +99,15 @@ class AlphaVantage:
                 "function": function,
                 "symbol": symbol,
                 "apikey": self._key,
-            }
+            },
         )
-        return resp.to_dict()
+        return resp
 
     def symbol_search(self, keywords: str) -> dict:
         function = "SYMBOL_SEARCH"
         resp = self._request_maker.request(
             method="GET",
             url=self._base_url,
-            params={"function": function, "keywords": keywords, "apikey": self._key}
+            params={"function": function, "keywords": keywords, "apikey": self._key},
         )
-        return resp.to_dict()
+        return resp

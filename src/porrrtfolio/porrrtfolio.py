@@ -33,7 +33,7 @@ def prices(
             "symbol": symbol,
             "outputsize": "full",
             "apikey": key,
-        }
+        },
     ).json()
     if read_from_cache:
         with open(path, "w") as f:

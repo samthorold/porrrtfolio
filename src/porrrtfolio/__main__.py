@@ -1,5 +1,6 @@
 import logging
 
+from porrrtfolio.cli import cli
 from porrrtfolio.services import AlphaVantage
 
 
@@ -15,6 +16,6 @@ exchange = "LSE"
 #     exchange=exchange,
 # )
 
-names = av.symbol_search("HSBC FTSE")
+# names = av.symbol_search("HSBC FTSE")
 
-breakpoint()
+cli()
