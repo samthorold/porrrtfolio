@@ -69,6 +69,14 @@ class Requests:
                 return Response(data=data, err=None)
 
 
+class DataService(Protocol):
+    def time_series_daily_adjusted(self, symbol: str, exchange: str | None = None) -> Response:
+        ...
+
+    def symbol_search(self, keywords: str) -> Response:
+        ...
+
+
 class AlphaVantage:
     """Alpha Vantage API wrapper.
 
@@ -88,7 +96,7 @@ class AlphaVantage:
         self._key = key if key is not None else os.getenv(_AV_KEY_NAME)
         self._request_maker = Requests() if request_maker is None else request_maker
 
-    def time_series_daily_adjusted(self, symbol: str, exchange: str | None = None) -> dict:
+    def time_series_daily_adjusted(self, symbol: str, exchange: str | None = None) -> Response:
         function = "TIME_SERIES_DAILY_ADJUSTED"
         if exchange is not None:
             symbol = f"{exchange}.{symbol}"
@@ -99,6 +107,7 @@ class AlphaVantage:
                 "function": function,
                 "symbol": symbol,
                 "apikey": self._key,
+                "outputsize": "full",
             },
         )
         return resp

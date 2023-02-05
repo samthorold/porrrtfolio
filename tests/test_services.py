@@ -120,6 +120,5 @@ def test_av_time_series() -> None:
     av = AlphaVantage()
 
     resp = av.time_series_daily_adjusted(symbol="IBM")
-    breakpoint()
     assert resp.data
     assert not resp.err
